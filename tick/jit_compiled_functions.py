@@ -52,3 +52,14 @@ def stage_transition_proportion_based_transition_from_matrix(trans_matrix,
                             population_array[u, curr_index] += pop_moved
 
                 break
+
+
+@nb.njit
+def mortality_proportion_based_mortality_all_graph(array_proportion, array_pop, array_vertices):
+    for i in range(array_pop.shape[0]):
+        if array_vertices[i]:
+            for j in range(array_pop.shape[1]):
+                array_pop[i, j] -= np.floor(array_pop[i, j] * array_proportion[j])
+
+
+
