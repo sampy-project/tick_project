@@ -1,4 +1,5 @@
 import numpy as np
+from .jit_compiled_functions import feeding_release_fed_ticks
 
 
 class FeedingSingleGraph:
@@ -24,9 +25,43 @@ class FeedingSingleGraph:
             raise ValueError("No 'nb_timesteps_feeding' provided for tick's feeding behavior.")
 
         self.dict_hosts = dict_hosts
+        self.nb_timesteps_feeding = nb_timesteps_feeding
 
-        for name_host, values in self.dict_hosts.itmes():
+        for _, values in self.dict_hosts.itmes():
             host, list_stages = values
-            for stages in list_stages:
-                for i in range(nb_timesteps_feeding):
-                    host.df_attributes['tick_stage_' + str(stages) + '_timestep_' + str(i)] = 0
+            for stage in list_stages:
+                for i in range(self.nb_timesteps_feeding):
+                    host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(i)] = 0
+                    host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(i) + '_inf'] = 0
+
+    def increment_feeding_stage(self, position_attribute='position'):
+        """
+        todo
+        """
+        for host, list_stages in self.dict_hosts.values():
+            for stage in list_stages:
+                feeding_release_fed_ticks(self.pop_per_vertex_fed, 
+                                          host.df_attribute[position_attribute],
+                                          host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + \
+                                                              str(stage + 1)],
+                                          stage)
+                feeding_release_fed_ticks(self.pop_per_vertex_fed_inf, 
+                                          host.df_attribute[position_attribute],
+                                          host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + \
+                                                              str(stage + 1) + '_inf'],
+                                          stage)
+
+                for i in range(self.nb_timesteps_feeding - 1):
+                    index_sup = self.nb_timesteps_feeding - 1 - i
+
+                    host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(index_sup)] = \
+                        host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(index_sup - 1)]
+                    host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(index_sup) + '_inf'] = \
+                        host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(index_sup - 1) + '_inf']
+                    
+    def attach_to_host_to_feed(self):
+        """
+        
+        """
+        pass
+                

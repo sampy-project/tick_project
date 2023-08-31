@@ -62,4 +62,7 @@ def mortality_proportion_based_mortality_all_graph(array_proportion, array_pop, 
                 array_pop[i, j] -= np.floor(array_pop[i, j] * array_proportion[j])
 
 
-
+@nb.njit
+def feeding_release_fed_ticks(array_pop, array_pos, array_nb_tick_fed, stage):
+    for i in range(array_nb_tick_fed.shape[0]):
+        array_pop[array_pos[i], stage] += array_nb_tick_fed[i]
