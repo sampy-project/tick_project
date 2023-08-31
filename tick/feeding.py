@@ -8,7 +8,7 @@ class FeedingSingleGraph:
     on which they will feed. This building block assumes that the various hosts and the ticks share 
     the same graph.
 
-    add new columns to the hosts dataframe
+    add new columns to the hosts df_population
 
     Mandatory kwargs:
         - dict_hosts: dictionnary whose keyes are hashable identifiers that the user chose to use
@@ -27,7 +27,7 @@ class FeedingSingleGraph:
         self.dict_hosts = dict_hosts
         self.nb_timesteps_feeding = nb_timesteps_feeding
 
-        for _, values in self.dict_hosts.itmes():
+        for _, values in self.dict_hosts.items():
             host, list_stages = values
             for stage in list_stages:
                 for i in range(self.nb_timesteps_feeding):
@@ -61,7 +61,7 @@ class FeedingSingleGraph:
                     
     def attach_to_host_to_feed(self):
         """
-        
+        todo
         """
         pass
                 
