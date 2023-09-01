@@ -69,8 +69,42 @@ def feeding_release_fed_ticks(array_pop, array_pos, array_nb_tick_fed, stage):
 
 
 @nb.njit
-def test_list_arr(list_input_arr, list_result_arr):
-    n = len(list_input_arr)
-    for i in range(n):
-        for j in range(list_input_arr[i].shape[0]):
-            list_result_arr[i][j] += list_input_arr[i][j]
+def feeding_attach_to_host_to_feed(rng_seed, list_counts, arr_ticks, stage, arr_proba,
+                                   list_pos_argsort, list_col_tick):
+    np.random.seed(rng_seed)
+    nb_host_pop = len(list_counts)
+    arr_counter_host = np.full(nb_host_pop, 0, dtype=int) # used when 
+
+    for pos in range(list_counts[0].shape[0]):
+
+        nb_agents = 0
+        for i in range(nb_host_pop):
+            nb_agents += list_counts[i][pos]
+
+        # this following section is, by itself, a good enough reason to recode a multinomial
+        # generator given that it is just made to satisfy numpy.random.multinomial
+        # construction. This will be done later.
+        arr_prob_extended = np.full(nb_agents + 1, 0., dtype=float)
+        tot_sum_prob_extended = 0.
+        counter = 0
+        for i in range(nb_host_pop):
+            tot_sum_prob_extended =+ arr_proba[i] * list_counts[i][pos]
+            for _ in range(list_counts[i][pos]):
+                arr_prob_extended[counter] = arr_proba[i]
+                counter += 1
+        
+        if tot_sum_prob_extended > 1.:
+            arr_prob_extended /= tot_sum_prob_extended
+        else:
+            arr_prob_extended[-1] = 1. - tot_sum_prob_extended
+        
+        multinom_sample = np.random.multinomial(arr_ticks[pos, stage], arr_prob_extended)
+
+        counter = 0
+        for i in range(nb_host_pop):
+            for j in range(list_counts[i][pos]):
+                list_col_tick[i][list_pos_argsort[i][arr_counter_host[i]]] += multinom_sample[counter]
+                arr_ticks[pos, stage] -= multinom_sample[counter]
+                counter += 1
+                arr_counter_host[i] += 1
+

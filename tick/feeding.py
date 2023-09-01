@@ -1,5 +1,6 @@
 import numpy as np
 from .jit_compiled_functions import feeding_release_fed_ticks
+from numba.typed import List as NumbaList
 
 
 class FeedingSingleGraph:
@@ -65,7 +66,7 @@ class FeedingSingleGraph:
     def _sampy_debug_attach_to_host_to_feed(self, list_host_stage_prob):
         pass
 
-    def attach_to_host_to_feed(self, list_stage_hosts_prob, position_attribute='position'):
+    def attach_to_host_to_feed(self, rng_seed, list_stage_hosts_prob, position_attribute='position'):
         """
         Attach ticks to their hosts, using the followin methodology:
             1) the user gives to each pair of host and stage a probability.
@@ -74,16 +75,34 @@ class FeedingSingleGraph:
             3) for each given cell, the number of tick that attach to a given agent is obtained using
                a multinomial distribution using the probabilities given by the user. 
 
+        IMPORTANT: this method used numba random number generation, which we try to avoid as much
+                   as possible. However, in this case it would require a lot of work, and probably
+                   the development of a function converting uniform number into a multinomial
+                   distrib.
+
+        :param rng_seed: seed used inside the numba compiled function
         :param list_stage_hosts_prob: list of lists of the form [stage, (host_string_1, p1), ..., 
                                                                  (host_string_k, pk)].
         """
         for item in list_stage_hosts_prob:
             stage = item[0]
-            list_counts = []
-            list_positions = []
+
+            # we first create the DataStructures that will be needed by the Numba Compiled function below
+            list_counts = NumbaList()
+            list_positions_argsort = NumbaList() # this is needed for technical reasons in the Numba func,
+                                                 # it is the argsort of positions of each host
             list_proba = []
+            list_col_tick = NumbaList()
+            list_col_tick_inf = NumbaList()
+
+            # now we fill those data structure
             for host, proba in item[1:]:
                 list_counts.append(self.dict_hosts[host].count_pop_per_vertex(position_attribute=position_attribute))
-                list_positions.append(self.dict_hosts[host].df_attributes[position_attribute])
-                list_proba.append()
+                list_positions_argsort.append(np.argsort(self.dict_hosts[host].df_attributes[position_attribute]))
+                list_proba.append(proba)
+                list_col_tick.append(self.dict_hosts[host].df_attributes['tick_stage_' + str(stage) + '_timestep_0'])
+                list_col_tick_inf.append(self.dict_hosts[host].df_attributes['tick_stage_' + str(stage) + '_timestep_0_inf'])
+            arr_proba = np.array(list_proba)
+            
+
                 
