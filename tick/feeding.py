@@ -59,9 +59,31 @@ class FeedingSingleGraph:
                     host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(index_sup) + '_inf'] = \
                         host.df_attributes['tick_stage_' + str(stage) + '_timestep_' + str(index_sup - 1) + '_inf']
                     
-    def attach_to_host_to_feed(self):
-        """
-        todo
-        """
+                host.df_attributes['tick_stage_' + str(stage) + '_timestep_0'] = 0
+                host.df_attributes['tick_stage_' + str(stage) + '_timestep_0_inf'] = 0
+                    
+    def _sampy_debug_attach_to_host_to_feed(self, list_host_stage_prob):
         pass
+
+    def attach_to_host_to_feed(self, list_stage_hosts_prob, position_attribute='position'):
+        """
+        Attach ticks to their hosts, using the followin methodology:
+            1) the user gives to each pair of host and stage a probability.
+            2) this probability is the probability for a tick in this stage to attach to an host of
+               the corresponding population.
+            3) for each given cell, the number of tick that attach to a given agent is obtained using
+               a multinomial distribution using the probabilities given by the user. 
+
+        :param list_stage_hosts_prob: list of lists of the form [stage, (host_string_1, p1), ..., 
+                                                                 (host_string_k, pk)].
+        """
+        for item in list_stage_hosts_prob:
+            stage = item[0]
+            list_counts = []
+            list_positions = []
+            list_proba = []
+            for host, proba in item[1:]:
+                list_counts.append(self.dict_hosts[host].count_pop_per_vertex(position_attribute=position_attribute))
+                list_positions.append(self.dict_hosts[host].df_attributes[position_attribute])
+                list_proba.append()
                 

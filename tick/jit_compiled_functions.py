@@ -66,3 +66,11 @@ def mortality_proportion_based_mortality_all_graph(array_proportion, array_pop, 
 def feeding_release_fed_ticks(array_pop, array_pos, array_nb_tick_fed, stage):
     for i in range(array_nb_tick_fed.shape[0]):
         array_pop[array_pos[i], stage] += array_nb_tick_fed[i]
+
+
+@nb.njit
+def test_list_arr(list_input_arr, list_result_arr):
+    n = len(list_input_arr)
+    for i in range(n):
+        for j in range(list_input_arr[i].shape[0]):
+            list_result_arr[i][j] += list_input_arr[i][j]
