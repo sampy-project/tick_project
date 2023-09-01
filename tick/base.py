@@ -9,7 +9,6 @@ class BaseTickFourPhases:
 
     attributes created:
         - graph: a single graph object on which ticks live.
-        - hosts: todo
         - stages_as_tuples: tuple of integer of length 4, such that
                                 - stages_as_tuple[0] is the number of stages in the egg phase of a tick life
                                 - stages_as_tuple[1] is the number of stages in the larva phase of a tick life
@@ -35,13 +34,10 @@ class BaseTickFourPhases:
                                 - stages_as_tuple[2] is the number of stages in the nymph phase of a tick life
                                 - stages_as_tuple[3] is the number of stages in the adult phase of a tick life
     """
-    def __init__(self, graph=None, hosts=None, stages_as_tupple=None):
+    def __init__(self, graph=None, stages_as_tupple=None):
         if graph is None:
             raise ValueError("A graph object should be passed to the tick constructor, using the kwarg 'graph'.")
         self.graph = graph
-
-        if hosts is None:
-            print("hosts not yet implemented")
 
         if stages_as_tupple is None:
             raise ValueError("Number of stages for each phase of a tick life should be provided using the kwarg"
@@ -62,6 +58,8 @@ class BaseTickFourPhases:
         # the vertex level of the graph. This info is stored in 2D arrays of integers.
         self.pop_per_vertex_unfed = np.full((self.graph.number_vertices, sum(stages_as_tupple)), 0, dtype=int)
         self.pop_per_vertex_fed = np.full((self.graph.number_vertices, sum(stages_as_tupple)), 0, dtype=int)
+        self.pop_per_vertex_unfed_inf = np.full((self.graph.number_vertices, sum(stages_as_tupple)), 0, dtype=int)
+        self.pop_per_vertex_fed_inf = np.full((self.graph.number_vertices, sum(stages_as_tupple)), 0, dtype=int)
 
         # we save the indexes
         self.indexes_egg_stage = (0, self.stages_as_tupple[0] - 1)
@@ -80,27 +78,45 @@ class BaseTickFourPhases:
                       This method will then count only the ticks in the specified stage.
         :param feeding_status: optional, string, default 'all'. If 'all', all ticks are counted. If 'fed' only fed 
                                ticks are counted. If 'unfed' only unfed ones. Any other value raises an error.
-        :param 
+        :param disease_status: optional, string, default 'all'. If 'all', all ticks are counted. If 'infected' only 
+                               infected ticks are counted. If 'susceptible' only non-infected ones. Any other value 
+                               raises an error.
 
         :return: 1D array of integers. r_arr[i] is the number of tick in the vertex of index i.
         """
         if feeding_status == 'all':
-            pop_per_vertex = self.pop_per_vertex_fed + self.pop_per_vertex_unfed
+            if disease_status == 'all':
+                pop_per_vertex = self.pop_per_vertex_fed + self.pop_per_vertex_unfed + \
+                                 self.pop_per_vertex_fed_inf + self.pop_per_vertex_unfed_inf
+            if disease_status == 'infected':
+                pop_per_vertex = self.pop_per_vertex_fed_inf + self.pop_per_vertex_unfed_inf
+            if disease_status == 'susceptible':
+                pop_per_vertex = self.pop_per_vertex_fed + self.pop_per_vertex_unfed
+            else:
+                raise ValueError("Disease status can only be chosen among ['all', 'infected', 'susceptible'].")
+
         elif feeding_status == 'fed':
-            pop_per_vertex = self.pop_per_vertex_fed
+            if disease_status == 'all':
+                pop_per_vertex = self.pop_per_vertex_fed + self.pop_per_vertex_fed_inf
+            if disease_status == 'infected':
+                pop_per_vertex = self.pop_per_vertex_fed_inf
+            if disease_status == 'susceptible':
+                pop_per_vertex = self.pop_per_vertex_fed
+            else:
+                raise ValueError("Disease status can only be chosen among ['all', 'infected', 'susceptible'].")
+
         elif feeding_status == 'unfed':
-            pop_per_vertex = self.pop_per_vertex_unfed
+            if disease_status == 'all':
+                pop_per_vertex = self.pop_per_vertex_unfed + self.pop_per_vertex_unfed_inf
+            if disease_status == 'infected':
+                pop_per_vertex = self.pop_per_vertex_unfed_inf
+            if disease_status == 'susceptible':
+                pop_per_vertex = self.pop_per_vertex_unfed
+            else:
+                raise ValueError("Disease status can only be chosen among ['all', 'infected', 'susceptible'].")
+            
         else:
-            raise ValueError("Status can only be chosen among ['all', 'fed', 'unfed'].")
-        
-        if disease_status == 'all':
-            pass
-        elif disease_status == 'infected':
-            pass
-        elif disease_status == 'susceptible':
-            pass
-        else:
-            raise ValueError("")
+            raise ValueError("Feeding status can only be chosen among ['all', 'fed', 'unfed'].")
 
         if stage is None:
             return pop_per_vertex.sum(axis=1)

@@ -78,7 +78,7 @@ class FeedingSingleGraph:
         IMPORTANT: this method used numba random number generation, which we try to avoid as much
                    as possible. However, in this case it would require a lot of work, and probably
                    the development of a function converting uniform number into a multinomial
-                   distrib.
+                   distrib. This will be changed in the future.
 
         :param rng_seed: seed used inside the numba compiled function
         :param list_stage_hosts_prob: list of lists of the form [stage, (host_string_1, p1), ..., 
